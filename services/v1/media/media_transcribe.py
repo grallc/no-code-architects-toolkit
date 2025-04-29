@@ -56,9 +56,10 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
                 'format': 'bestaudio/best',  # Download best quality
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
                 'quiet': True,
+                'cookiefile': '/tmp/youtube.txt',
                 'no_warnings': True,
             }
-            
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(media_url, download=True)
                 title = info['title']
