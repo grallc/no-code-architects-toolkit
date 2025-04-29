@@ -77,6 +77,7 @@ def transcribe(job_id, data):
                 "text_url": None,
                 "srt_url": None,
                 "segments_url": None,
+                "title": result[3]
             }
 
             return result_json, "/v1/transcribe/media", 200
@@ -90,6 +91,7 @@ def transcribe(job_id, data):
                 "text_url": upload_file(result[0]) if include_text is True else None,
                 "srt_url": upload_file(result[1]) if include_srt is True else None,
                 "segments_url": upload_file(result[2]) if include_segments is True else None,
+                "title": result[3]
             }
 
             if include_text is True:

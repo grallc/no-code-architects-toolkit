@@ -38,13 +38,16 @@ def is_social_media_url(url):
         'facebook': r'facebook\.com|fb\.watch',
         'instagram': r'instagram\.com',
         'twitter': r'twitter\.com|x\.com',
-        'tiktok': r'tiktok\.com'
+        'tiktok': r'tiktok\.com',
+        'youtube': r'youtube\.com'
     }
     return any(re.search(pattern, url.lower()) for pattern in patterns.values())
 
 def process_transcribe_media(media_url, task, include_text, include_srt, include_segments, word_timestamps, response_type, language, job_id, words_per_line=None):
     """Transcribe or translate media and return the transcript/translation, SRT or VTT file path."""
     logger.info(f"Starting {task} for media URL: {media_url} (is_social_media_url: {is_social_media_url(media_url)})")
+
+    title = None
     
     # Handle social media URLs using yt-dlp
     if is_social_media_url(media_url):
@@ -58,9 +61,11 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(media_url, download=True)
+                title = info['title']
                 input_filename = ydl.prepare_filename(info)
     else:
         input_filename = download_file(media_url, os.path.join(LOCAL_STORAGE_PATH, f"{job_id}_input"))
+        title = os.path.basename(input_filename)
     logger.info(f"Downloaded media to local file: {input_filename}")
 
     try:
@@ -154,7 +159,7 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
         logger.info(f"{task.capitalize()} successful, output type: {response_type}")
 
         if response_type == "direct":
-            return text, srt_text, segments_json
+            return text, srt_text, segments_json, title
         else:
             
             if include_text is True:
@@ -178,7 +183,7 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
             else:
                 segments_filename = None
 
-            return text_filename, srt_filename, segments_filename 
+            return text_filename, srt_filename, segments_filename, input_filename 
 
     except Exception as e:
         logger.error(f"{task.capitalize()} failed: {str(e)}")
