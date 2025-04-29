@@ -52,6 +52,7 @@ def process_transcribe_media(media_url, task, include_text, include_srt, include
     # Handle social media URLs using yt-dlp
     if is_social_media_url(media_url):
         with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+            logger.info(f"CACA YOUTUBE: {open('/tmp/youtube.txt').read()}")
             ydl_opts = {
                 'format': 'bestaudio/best',  # Download best quality
                 'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
