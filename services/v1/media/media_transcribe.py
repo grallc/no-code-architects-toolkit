@@ -24,15 +24,43 @@ from whisper.utils import WriteSRT, WriteVTT
 from services.file_management import download_file
 import logging
 from config import LOCAL_STORAGE_PATH
+import re
+import yt_dlp
+import tempfile
 
 # Set up logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+def is_social_media_url(url):
+    """Check if URL is from social media platforms."""
+    patterns = {
+        'facebook': r'facebook\.com|fb\.watch',
+        'instagram': r'instagram\.com',
+        'twitter': r'twitter\.com|x\.com',
+        'tiktok': r'tiktok\.com'
+    }
+    return any(re.search(pattern, url.lower()) for pattern in patterns.values())
+
 def process_transcribe_media(media_url, task, include_text, include_srt, include_segments, word_timestamps, response_type, language, job_id, words_per_line=None):
     """Transcribe or translate media and return the transcript/translation, SRT or VTT file path."""
-    logger.info(f"Starting {task} for media URL: {media_url}")
-    input_filename = download_file(media_url, os.path.join(LOCAL_STORAGE_PATH, f"{job_id}_input"))
+    logger.info(f"Starting {task} for media URL: {media_url} (is_social_media_url: {is_social_media_url(media_url)})")
+    
+    # Handle social media URLs using yt-dlp
+    if is_social_media_url(media_url):
+        with tempfile.TemporaryDirectory(delete=False) as temp_dir:
+            ydl_opts = {
+                'format': 'bestaudio/best',  # Download best quality
+                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                'quiet': True,
+                'no_warnings': True,
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(media_url, download=True)
+                input_filename = ydl.prepare_filename(info)
+    else:
+        input_filename = download_file(media_url, os.path.join(LOCAL_STORAGE_PATH, f"{job_id}_input"))
     logger.info(f"Downloaded media to local file: {input_filename}")
 
     try:
