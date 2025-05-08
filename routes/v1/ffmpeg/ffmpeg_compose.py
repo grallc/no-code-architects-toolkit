@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 @validate_payload({
     "type": "object",
     "properties": {
+        "output_key": {"type": "string"},
+        "thumbnail_key": {"type": "string"},
         "inputs": {
             "type": "array",
             "items": {
@@ -109,7 +111,7 @@ logger = logging.getLogger(__name__)
         "webhook_url": {"type": "string", "format": "uri"},
         "id": {"type": "string"}
     },
-    "required": ["inputs", "outputs"],
+    "required": ["inputs", "outputs", "output_key"],
     "additionalProperties": False
 })
 @queue_task_wrapper(bypass_queue=False)
@@ -123,15 +125,17 @@ def ffmpeg_api(job_id, data):
         output_urls = []
         for i, output_filename in enumerate(output_filenames):
             if os.path.exists(output_filename):
-                upload_url = upload_file(output_filename)
+                upload_url = upload_file(output_filename, data.get('output_key'))
                 output_info = {"file_url": upload_url}
                 
                 if metadata and i < len(metadata):
                     output_metadata = metadata[i]
                     if 'thumbnail' in output_metadata:
+                        if not data.get('thumbnail_key'):
+                            raise Exception("thumbnail_key is required when thumbnail is requested")
                         thumbnail_path = output_metadata['thumbnail']
                         if os.path.exists(thumbnail_path):
-                            thumbnail_url = upload_file(thumbnail_path)
+                            thumbnail_url = upload_file(thumbnail_path, data.get('thumbnail_key'))
                             del output_metadata['thumbnail']
                             output_metadata['thumbnail_url'] = thumbnail_url
                             os.remove(thumbnail_path)  # Clean up local thumbnail file

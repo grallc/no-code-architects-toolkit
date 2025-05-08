@@ -42,10 +42,11 @@ logger = logging.getLogger(__name__)
             },
             "minItems": 1
         },
+        "output_key": {"type": "string"},
         "webhook_url": {"type": "string", "format": "uri"},
         "id": {"type": "string"}
     },
-    "required": ["video_urls"],
+    "required": ["video_urls", "output_key"],
     "additionalProperties": False
 })
 @queue_task_wrapper(bypass_queue=False)
@@ -60,7 +61,7 @@ def combine_videos(job_id, data):
         output_file = process_video_concatenate(media_urls, job_id)
         logger.info(f"Job {job_id}: Video combination process completed successfully")
 
-        cloud_url = upload_file(output_file)
+        cloud_url = upload_file(output_file, data.get('output_key'))
         logger.info(f"Job {job_id}: Combined video uploaded to cloud storage: {cloud_url}")
 
         return cloud_url, "/v1/video/concatenate", 200

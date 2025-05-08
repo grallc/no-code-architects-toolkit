@@ -36,15 +36,20 @@ logger = logging.getLogger(__name__)
         "length": {"type": "number", "minimum": 1, "maximum": 60},
         "frame_rate": {"type": "integer", "minimum": 15, "maximum": 60},
         "zoom_speed": {"type": "number", "minimum": 0, "maximum": 100},
+        "voice_id": {"type": "string"},
+        "voice_text": {"type": "string"},
+        "voice_language": {"type": "string"},
         "webhook_url": {"type": "string", "format": "uri"},
-        "id": {"type": "string"}
+        "id": {"type": "string"},
+        "output_key": {"type": "string"}
     },
-    "required": ["image_url"],
+    "required": ["image_url", "output_key"],
     "additionalProperties": False
 })
 @queue_task_wrapper(bypass_queue=False)
 def image_to_video(job_id, data):
     image_url = data.get('image_url')
+    output_key = data.get('output_key')
     length = data.get('length', 5)
     frame_rate = data.get('frame_rate', 30)
     zoom_speed = data.get('zoom_speed', 3) / 100
@@ -60,7 +65,7 @@ def image_to_video(job_id, data):
         )
 
         # Upload the resulting file using the unified upload_file() method
-        cloud_url = upload_file(output_filename)
+        cloud_url = upload_file(output_filename, output_key)
 
         # Log the successful upload
         logger.info(f"Job {job_id}: Converted video uploaded to cloud storage: {cloud_url}")

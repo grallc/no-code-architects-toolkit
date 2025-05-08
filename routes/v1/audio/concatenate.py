@@ -24,10 +24,11 @@ logger = logging.getLogger(__name__)
                 },
                 "minItems": 1,
             },
+            "output_key": {"type": "string"},
             "webhook_url": {"type": "string", "format": "uri"},
             "id": {"type": "string"},
         },
-        "required": ["audio_urls"],
+        "required": ["audio_urls", "output_key"],
         "additionalProperties": False,
     }
 )
@@ -45,7 +46,7 @@ def combine_audio(job_id, data):
         output_file = process_audio_concatenate(media_urls, job_id)
         logger.info(f"Job {job_id}: Audio combination process completed successfully")
 
-        cloud_url = upload_file(output_file)
+        cloud_url = upload_file(output_file, data.get('output_key'))
         logger.info(
             f"Job {job_id}: Combined audio uploaded to cloud storage: {cloud_url}"
         )

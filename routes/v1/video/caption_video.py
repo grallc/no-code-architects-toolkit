@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
     "properties": {
         "video_url": {"type": "string", "format": "uri"},
         "captions": {"type": "string"},
+        "output_key": {"type": "string"},
         "settings": {
             "type": "object",
             "properties": {
@@ -89,7 +90,7 @@ logger = logging.getLogger(__name__)
         "id": {"type": "string"},
         "language": {"type": "string"}
     },
-    "required": ["video_url"],
+    "required": ["video_url", "output_key"],
     "additionalProperties": False
 })
 @queue_task_wrapper(bypass_queue=False)
@@ -128,7 +129,7 @@ def caption_video_v1(job_id, data):
         logger.info(f"Job {job_id}: Captioning process completed successfully")
 
         # Upload the captioned video
-        cloud_url = upload_file(output_path)
+        cloud_url = upload_file(output_path, data.get("output_key"))
         logger.info(f"Job {job_id}: Captioned video uploaded to cloud storage: {cloud_url}")
 
         # Clean up the output file after upload

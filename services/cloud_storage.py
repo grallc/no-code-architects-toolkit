@@ -83,8 +83,8 @@ class S3CompatibleProvider(CloudStorageProvider):
             except Exception as e:
                 logger.warning(f"Failed to parse Digital Ocean URL: {e}. Using provided values.")
 
-    def upload_file(self, file_path: str) -> str:
-        return upload_to_s3(file_path, self.endpoint_url, self.access_key, self.secret_key, self.bucket_name, self.region)
+    def upload_file(self, file_path: str, output_key: str) -> str:
+        return upload_to_s3(file_path, self.endpoint_url, self.access_key, self.secret_key, self.bucket_name, self.region, output_key)
 
 def get_storage_provider() -> CloudStorageProvider:
     
@@ -105,11 +105,11 @@ def get_storage_provider() -> CloudStorageProvider:
     
     raise ValueError(f"No cloud storage settings provided.")
 
-def upload_file(file_path: str) -> str:
+def upload_file(file_path: str, output_key: str) -> str:
     provider = get_storage_provider()
     try:
         logger.info(f"Uploading file to cloud storage: {file_path}")
-        url = provider.upload_file(file_path)
+        url = provider.upload_file(file_path, output_key)
         logger.info(f"File uploaded successfully: {url}")
         return url
     except Exception as e:
